@@ -72,7 +72,7 @@
 	<bean id="messageIdRepo" class="org.apache.camel.processor.idempotent.jdbc.JdbcMessageIdRepository">
 		<argument index="0" ref="messageIdRepoDs"/>
 		<argument index="1" ref="jtaTransactionTemplate" />
-		<argument index="2" value="Identity"/>
+		<argument index="2" value="Ladok"/>
 	</bean>
 
 	<!-- Transaction used in route. -->
@@ -113,7 +113,7 @@
 			<!-- TODO: getLastReadEntryId from idempotent consumer - ->
 			<to uri="bean:eventPersistance?method=getLastReadEntryId" />
 			-->
-			<to uri="sql:select count(messageId) from CAMEL_MESSAGEPROCESSED where processorName='Ladok' and createdAt = (select max(createdAt) from CAMEL_MESSAGEPROCESSED)?dataSource=messageIdRepoDs&amp;outputType=SelectOne"/>
+			<to uri="sql:select messageId from CAMEL_MESSAGEPROCESSED where processorName='Ladok' and id = (select max(id) from CAMEL_MESSAGEPROCESSED)?dataSource=messageIdRepoDs&amp;outputType=SelectOne"/>
 
 			<!-- Print the last read entry id to the console. -->
 			<to uri="log:AAAAAAAFTER-sql?level=INFO" />

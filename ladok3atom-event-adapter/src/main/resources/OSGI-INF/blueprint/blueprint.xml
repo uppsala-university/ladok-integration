@@ -1,37 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
-	xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.0.0"
+
+<blueprint default-activation="eager"
+	xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:osgi="http://www.springframework.org/schema/osgi"
-	xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
+	xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.0.0"
+        xmlns:tx="http://aries.apache.org/xmlns/transactions/v1.0.0"
+	xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0
+			    http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
 
-	<!-- We need to execute this route in a transaction that ensures that 
-	     each read event also makes it all the way to the distribution quene. -->
-	<bean id="NEW" class="org.apache.camel.spring.spi.SpringTransactionPolicy">
-		<property name="transactionManager" ref="jmsTransactionManager" />
-		<property name="propagationBehaviorName" value="PROPAGATION_REQUIRES_NEW" />
+	<cm:property-placeholder persistent-id="se.sunet.ati.ladok.atom.amq"> 
+		<cm:default-properties>
+			<cm:property name="amq.url" value="tcp://localhost:61616" />
+			<cm:property name="amq.deadletterUrl" value="tcp://localhost:61617" />
+			<cm:property name="amq.user" value="smx" />
+			<cm:property name="amq.pw" value="smx" />
+		</cm:default-properties>
+	</cm:property-placeholder>
+
+	<!-- References must be assigned local identifiers. -->
+	<reference id="platformTxManager" interface="org.springframework.transaction.PlatformTransactionManager" />
+	<reference id="transactionManager" interface="javax.transaction.TransactionManager" />
+	<reference id="recoverableTxManager" interface="org.apache.geronimo.transaction.manager.RecoverableTransactionManager" />
+	<reference id="messageIdRepoDs" interface="javax.sql.DataSource" filter="(osgi.jndi.service.name=jdbc/UUDS)" />
+
+	<!-- Setting up the amq:// components with a configuration that points to
+		the JcaPooledConnectionFactory and the global Spring PlatformTransactiongManager.
+		Note that transacted is set to 'false' because it's the JTA TransactionManager
+		that manages the transactions and not the JMS component itself. -->
+	<bean id="amq" class="org.apache.camel.component.jms.JmsComponent">
+		<property name="configuration" ref="AMQConfig" />
 	</bean>
 
-	<!-- JMS and ActiveMQ is used for distribution and transactions. -->
-	<bean id="jmsTransactionManager"
-		class="org.springframework.jms.connection.JmsTransactionManager">
-		<property name="connectionFactory" ref="jmsConnectionFactory" />
+	<bean id="AMQConfig" class="org.apache.camel.component.jms.JmsConfiguration">
+		<property name="connectionFactory" ref="XAPooledCF" />
+		<property name="transacted" value="false" />
+		<property name="transactionManager" ref="platformTxManager" />
+		<property name="maxConcurrentConsumers" value="1" />
+		<property name="cacheLevelName" value="CACHE_NONE" />
 	</bean>
-	<bean id="jmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-		<property name="brokerURL" value="tcp://localhost:61616" />
-        <property name="userName" value="smx" />
-        <property name="password" value="smx" />
+
+	<!-- The JcaPooledConnectionFactory ensures that the JMS Sessions get enlisted
+		in the global transaction manager -->
+	<bean id="XAPooledCF" class="org.apache.activemq.pool.JcaPooledConnectionFactory" init-method="start" destroy-method="stop">
+		<property name="name" value="activemq.default" />
+		<property name="maxConnections" value="1" />
+		<property name="connectionFactory" ref="AmqXaCF" />
+		<property name="transactionManager" ref="transactionManager" />
 	</bean>
-	<bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
-		<property name="connectionFactory" ref="jmsConnectionFactory" />
-		<property name="transacted" value="true" />
+
+	<!-- Defines an ActiveMQ XA-aware ConnectionFactory -->
+	<bean id="AmqXaCF" class="org.apache.activemq.ActiveMQXAConnectionFactory">
+		<property name="brokerURL" value="failover:(${amq.url})?jms.prefetchPolicy.all=1" />
+		<property name="userName" value="${amq.user}" />
+		<property name="password" value="${amq.pw}" />
 	</bean>
-	
-	<!-- For now we use the simple file based event persistance and the generic ATOM client. -->
-	<bean id="eventPersistance" class="se.sunet.ati.ladok.atom.FileBasedEventPersistance" />
+
+	<!-- A ResourceManager is needed for every transactional resource in order
+		to recover any outstanding transactions after a crash. It will register with
+		the Aries transaction manager, which then calls recoverResource() on the
+		transactional resource itself. -->
+	<bean id="resourceManager-AMQ" class="org.apache.activemq.pool.ActiveMQResourceManager" init-method="recoverResource">
+		<property name="transactionManager" ref="recoverableTxManager" />
+		<!-- CF must be of type ActiveMQConnectionFactory, otherwise no recovery will occur -->
+		<property name="connectionFactory" ref="XAPooledCF" />
+		<property name="resourceName" value="activemq.default" />
+		<property name="userName" value="${amq.user}" />
+		<property name="password" value="${amq.pw}" />
+	</bean>
+
+	<!-- Idempotent Camel component configured with JDVC and an XA datasource -->
+	<bean id="messageIdRepo" class="org.apache.camel.processor.idempotent.jdbc.JdbcMessageIdRepository">
+		<argument index="0" ref="messageIdRepoDs"/>
+		<argument index="1" ref="jtaTransactionTemplate" />
+		<argument index="2" value="Identity"/>
+	</bean>
+
+	<!-- Transaction used in route. -->
+	<bean id="PROPAGATION_REQUIRED" class="org.apache.camel.spring.spi.SpringTransactionPolicy">
+		<property name="transactionManager" ref="platformTxManager" />
+		<property name="propagationBehaviorName" value="PROPAGATION_REQUIRED" />
+	</bean>
+
+	<!-- Transaction template for JTA. -->
+	<bean id="jtaTransactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+		<property name="transactionManager" ref="platformTxManager" />
+		<property name="propagationBehavior" value="0" />
+	</bean>
+
+	<!-- We us a separate broker for dead letters since we need to exclude queue from XA-transactions. -->
+	<bean id="amq-dead-letter" class="org.apache.activemq.camel.component.ActiveMQComponent">
+		<property name="brokerURL" value="${amq.deadletterUrl}" />
+		<property name="userName" value="${amq.user}" />
+		<property name="password" value="${amq.pw}" />
+ 	</bean>
+
 	<bean id="atomClient" class="se.sunet.ati.ladok.atom.AtomClient" />	
 
-	<camelContext xmlns="http://camel.apache.org/schema/blueprint">
+	<camelContext xmlns="http://camel.apache.org/schema/blueprint"
+		      xmlns:base="http://schemas.ladok.se"
+		      trace="false">
 
 		<route>
 		
@@ -40,35 +107,59 @@
 
 			<!-- Everything after the created transaction will ensure that each read ATOM entry
 			     makes it all the way to the queye. -->
-			<transacted ref="NEW" />
+			<transacted ref="PROPAGATION_REQUIRED" />
 			
 			<!-- Collect the identifier for hte last read ATOM entry. -->
+			<!-- TODO: getLastReadEntryId from idempotent consumer - ->
 			<to uri="bean:eventPersistance?method=getLastReadEntryId" />
-			
+			-->
+			<to uri="sql:select count(messageId) from CAMEL_MESSAGEPROCESSED where processorName='Ladok' and createdAt = (select max(createdAt) from CAMEL_MESSAGEPROCESSED)?dataSource=messageIdRepoDs&amp;outputType=SelectOne"/>
+
 			<!-- Print the last read entry id to the console. -->
-			<to uri="log:log-test?level=INFO" />
+			<to uri="log:AAAAAAAFTER-sql?level=INFO" />
 			
-			<!-- Query new Ladok for new entries and return a splittable list. -->			
+			<!-- Query new Ladok for new entries and return a splittable list. -->
 			<to uri="bean:atomClient?method=getEntries" />
 
 			<!-- For each new entry in the list, log and put the event on the distribution queue. -->
 			<split streaming="true" stopOnException="true">
+			       
+                                <simple>${body}</simple>
 
-				<simple>${body}</simple>
-				
-				<!-- Print to console. -->
-				<to uri="log:hanterar-meddelande?level=INFO" />
-				
-				<!-- Put on dummy log. Just for testing. -->
-				<to uri="activemq:queue:ladok3-dummy-log" />
-				
-				<!-- Save current event to event persistance.  -->
-				<to uri="bean:eventPersistance?method=saveEntry" />
-				
-				<!-- Convert to string to avoid JMS serialization problems before put to 
-				     distribution queue. -->
+			        <to uri="log:HEEEEEEEEEEERRRRRRRRRRREEEEEEEEEEEEEEEEEEEEEE?level=INFO&amp;showHeaders=true" />
+			        
+				<setHeader headerName="FeedId">
+				    <simple>${body.getBaseUri()}</simple>
+				</setHeader>
+
 				<convertBodyTo type="java.lang.String" />
-				<to uri="activemq:queue:ladok3-event-distribution" />
+
+				<to uri="xslt:atom/atomwash.xsl"/>
+
+				<setHeader headerName="HandelseUID">
+				    <xpath resultType="java.lang.String">concat(/*/base:HandelseUID/text(), "" , "")</xpath>
+				</setHeader>
+				
+  			        <!-- TODO: add idempotent id -->
+				<!-- Message identifier extracted form message and put in header. -->
+				<setHeader headerName="MessageId">
+				    <simple>${headers.FeedId};${headers.HandelseUID}</simple>
+				</setHeader>
+				
+				<idempotentConsumer messageIdRepositoryRef="messageIdRepo" skipDuplicate="true">
+
+				    <!-- Use the MessageId header as key for identifying duplicate messages -->
+				    <header>MessageId</header>
+
+				    <!-- Print to console. -->
+				    <to uri="log:hanterar-meddelande?level=INFO" />
+				    
+				    <!-- Save current event to event persistance.  -->
+				    <!-- <to uri="bean:eventPersistance?method=saveEntry" /> <!- - TODO: remove -->
+				    
+				    <to uri="amq:queue:ladok3-event-distribution" />
+
+				</idempotentConsumer>
 
 			</split>
 			

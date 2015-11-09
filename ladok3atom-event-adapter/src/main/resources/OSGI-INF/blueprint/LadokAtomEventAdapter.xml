@@ -96,11 +96,12 @@
 
 	<bean id="atomClient" class="se.sunet.ati.ladok.atom.AtomClient" />	
 
-	<camelContext xmlns="http://camel.apache.org/schema/blueprint"
+	<camelContext id="LadokAtomEventAdapter" 
+			  xmlns="http://camel.apache.org/schema/blueprint"
 		      xmlns:base="http://schemas.ladok.se"
 		      trace="false">
 
-		<route>
+		<route id="LadokAtomEventAdapterRoute">
 		
 			<!-- Pull the Ladok ATOM feed every 5 seconds.. -->
 			<from uri="timer://ladok?fixedRate=true&amp;period=5000&amp;repeatCount=0" />

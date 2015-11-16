@@ -93,7 +93,7 @@
 				    <!-- Save current event to event persistance.  -->
 				    <!-- <to uri="bean:eventPersistance?method=saveEntry" /> <!- - TODO: remove -->
 				    
-				    <to uri="amqxa:queue:ladok3-event-distribution" />
+				    <to uri="amqxa:queue:ladok-distribution" />
 
 				</idempotentConsumer>
 

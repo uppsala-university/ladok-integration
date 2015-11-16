@@ -9,7 +9,7 @@
 	<name>Ladok 3 Integration</name>
 
 	<modules>
-		<module>ladok3atom-event-adapter</module>
+		<module>ladok-atom-adapter</module>
   	</modules>
 
 	<properties>

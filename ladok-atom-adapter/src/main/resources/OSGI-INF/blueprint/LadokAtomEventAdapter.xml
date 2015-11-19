@@ -47,13 +47,10 @@
 			<from uri="timer://ladok?fixedRate=true&amp;period=5000&amp;repeatCount=0" />
 
 			<!-- Everything after the created transaction will ensure that each read ATOM entry
-			     makes it all the way to the queye. -->
+			     makes it all the way to the queue. -->
 			<transacted ref="PROPAGATION_REQUIRED" />
 			
-			<!-- Collect the identifier for hte last read ATOM entry. -->
-			<!-- TODO: getLastReadEntryId from idempotent consumer - ->
-			<to uri="bean:eventPersistance?method=getLastReadEntryId" />
-			-->
+			<!-- Collect the identifier for the last read ATOM entry. -->
 			<to uri="sql:select messageId from CAMEL_MESSAGEPROCESSED where processorName='Ladok' and id = (select max(id) from CAMEL_MESSAGEPROCESSED)?dataSource=messageIdRepoDs&amp;outputType=SelectOne"/>
 
 			<!-- Query new Ladok for new entries and return a splittable list. -->
@@ -61,8 +58,8 @@
 
 			<!-- For each new entry in the list, log and put the event on the distribution queue. -->
 			<split streaming="true" stopOnException="true">
-			       
-                                <simple>${body}</simple>
+			
+				<simple>${body}</simple>
 
 				<setHeader headerName="FeedId">
 				    <simple>${body.getBaseUri()}</simple>

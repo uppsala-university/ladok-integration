@@ -42,6 +42,10 @@
 		      trace="false">
 
 		<route id="LadokAtomEventAdapterRoute">
+	
+			<description>
+				This is the ATOM adapter for pulling events from Ladok.
+			</description>	
 		
 			<!-- Pull the Ladok ATOM feed every 5 seconds.. -->
 			<from id="Ladok ATOM timer" uri="timer://ladok?fixedRate=true&amp;period=5000&amp;repeatCount=0" />

@@ -4,7 +4,7 @@
 	xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.0.0"
-        xmlns:tx="http://aries.apache.org/xmlns/transactions/v1.0.0"
+	xmlns:tx="http://aries.apache.org/xmlns/transactions/v1.0.0"
 	xmlns:ext="http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.2.0"
 	xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0
 			    http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
@@ -77,8 +77,7 @@
 				    <xpath resultType="java.lang.String">concat(/*/events:HandelseUID/text(), "" , "")</xpath>
 				</setHeader>
 				
-  			        <!-- TODO: add idempotent id -->
-				<!-- Message identifier extracted form message and put in header. -->
+ 				<!-- Message identifier extracted form message and put in header. -->
 				<setHeader headerName="MessageId">
 				    <simple>${headers.FeedId};${headers.HandelseUID}</simple>
 				</setHeader>
@@ -93,10 +92,6 @@
 				    
 				    <!-- Save current event to event persistance.  -->
 				    <!-- TODO: wiretap for logging... -->
-				    
-				    <!-- TODO: delete from uuevent where producer = 'Ladok';
-				    		   delete from CAMEL_MESSAGEPROCESSED where processorName = 'Ladok';
-				     -->
 				    
 				    <to id="Event distribution" uri="amqxa:queue:ladok-distribution" />
 

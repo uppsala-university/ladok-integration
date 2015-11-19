@@ -38,7 +38,7 @@
 
 	<camelContext id="LadokAtomEventAdapter" 
 			  xmlns="http://camel.apache.org/schema/blueprint"
-		      xmlns:base="http://schemas.ladok.se"
+		      xmlns:events="http://schemas.ladok.se/events"
 		      trace="false">
 
 		<route id="LadokAtomEventAdapterRoute">
@@ -70,7 +70,7 @@
 				<to id="ATOM XML washing" uri="xslt:atom/atomwash.xsl"/>
 
 				<setHeader headerName="HandelseUID">
-				    <xpath resultType="java.lang.String">concat(/*/base:HandelseUID/text(), "" , "")</xpath>
+				    <xpath resultType="java.lang.String">concat(/*/events:HandelseUID/text(), "" , "")</xpath>
 				</setHeader>
 				
   			        <!-- TODO: add idempotent id -->

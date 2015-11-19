@@ -15,7 +15,7 @@
 	<reference id="amqxa" interface="org.apache.camel.component.jms.JmsComponent" ext:proxy-method='classes' filter="(osgi.jndi.service.name=amq/XA)" />
 	<reference id="amqdlq" interface="org.apache.camel.component.jms.JmsComponent" ext:proxy-method='classes' filter="(osgi.jndi.service.name=amq/DLQ)" />
 
-	<!-- Idempotent Camel component configured with JDVC and an XA datasource -->
+	<!-- Idempotent Camel component configured with JDBC and an XA datasource -->
 	<bean id="messageIdRepo" class="org.apache.camel.processor.idempotent.jdbc.JdbcMessageIdRepository">
 		<argument index="0" ref="messageIdRepoDs"/>
 		<argument index="1" ref="jtaTransactionTemplate" />
@@ -88,7 +88,11 @@
 				    <to uri="log:hanterar-meddelande?level=INFO" />
 				    
 				    <!-- Save current event to event persistance.  -->
-				    <!-- <to uri="bean:eventPersistance?method=saveEntry" /> <!- - TODO: remove -->
+				    <!-- TODO: wiretap for logging... -->
+				    
+				    <!-- TODO: delete from uuevent where producer = 'Ladok';
+				    		   delete from CAMEL_MESSAGEPROCESSED where processorName = 'Ladok';
+				     -->
 				    
 				    <to id="Event distribution" uri="amqxa:queue:ladok-distribution" />
 

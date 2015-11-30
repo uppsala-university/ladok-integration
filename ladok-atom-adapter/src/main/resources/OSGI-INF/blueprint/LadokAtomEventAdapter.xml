@@ -10,11 +10,11 @@
 			    http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
 
 <!--
-	<cm:property-placeholder persistent-id="se.uu.its.integration.ladok-atom-adapter" placeholder-prefix="$(" placeholder-suffix=")">
+	<cm:property-placeholder persistent-id="ladok-atom-adapter" placeholder-prefix="$(" placeholder-suffix=")">
 		<cm:default-properties>
 			<cm:property name="atom-adapter.certificateFile" value="" />
 			<cm:property name="atom-adapter.certificatePwd" value="" />
-			<cm:property name="atom-adapter.usecert" value="false" />
+			<cm:property name="atom-adapter.useCert" value="true" />
 			<cm:property name="atom-adapter.lastFeed" value="https://api.mit.ladok.se/uppfoljning/feed/recent" />
 		</cm:default-properties>
 	</cm:property-placeholder>

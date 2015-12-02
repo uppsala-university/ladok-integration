@@ -10,6 +10,7 @@
 
 	<modules>
 		<module>ladok-atom-adapter</module>
+		<module>ladok-integration-packaging-karaf</module>
   	</modules>
 
 	<properties>

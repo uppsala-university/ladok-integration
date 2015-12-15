@@ -8,6 +8,7 @@
 
   <feature name="ladok-atom-adapter" version="1.0.0-SNAPSHOT" description="Ladok 3 Atom Event Adapter">
     <feature version="1.0.0-SNAPSHOT">common-logdb-datasource</feature>
+    <feature version="1.0.0-SNAPSHOT">common-amq</feature>
     <feature version="1.1.3">abdera</feature>
     <feature>camel-sql</feature>
     <bundle>mvn:se.sunet.ati.ladok/ladok3atom-client/0.0.1-SNAPSHOT</bundle>

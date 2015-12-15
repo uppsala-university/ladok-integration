@@ -15,5 +15,5 @@ Deploy
 
 In Karaf/Servicemix shell:
 
-    features:addurl mvn:se.uu.its.ladok/ladok-integration-packaging-karaf/1.0.0-SNAPSHOT/xml/features
+    features:addurl mvn:se.sunet.ati.integration.ladok/ladok-integration-packaging-karaf/1.0.0-SNAPSHOT/xml/features
     features:install ladok-integration-all

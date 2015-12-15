@@ -8,7 +8,7 @@
 	</parent>
 
 	<artifactId>ladok-atom-adapter</artifactId>
-	<version>${parent.version}</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 	<name>Ladok 3 Atom Event Adapter</name>
 

@@ -7,7 +7,7 @@ Ladok integration components.
 Dependencies
 ------------
 
-Ladok integration depends on common-integration and ladok projects. They are all available on github:
+Ladok integration depends on common-integration and ladok projects. They are available on github:
 
 https://github.com/uppsala-university
 

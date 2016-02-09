@@ -54,24 +54,24 @@
 -->
 	</bean>
 
-	<camelContext id="LadokAtomEventAdapter" 
+	<camelContext id="LadokAtomEventAdapter"
 			  xmlns="http://camel.apache.org/schema/blueprint"
 		      xmlns:events="http://schemas.ladok.se/events"
 		      trace="false">
 
 		<route id="LadokAtomEventAdapterRoute">
-	
+
 			<description>
 				This is the ATOM adapter for pulling events from Ladok.
-			</description>	
-		
+			</description>
+
 			<!-- Pull the Ladok ATOM feed every 5 seconds.. -->
 			<from id="Ladok ATOM timer" uri="timer://ladok?fixedRate=true&amp;period=5000&amp;repeatCount=0" />
 
 			<!-- Everything after the created transaction will ensure that each read ATOM entry
 			     makes it all the way to the queue. -->
 			<transacted ref="PROPAGATION_REQUIRED" />
-			
+
 			<!-- Collect the identifier for the last read ATOM entry. -->
 			<to id="Last read ATOM entry id assignment" uri="sql:select messageId from CAMEL_MESSAGEPROCESSED where processorName='Ladok' and id = (select max(id) from CAMEL_MESSAGEPROCESSED)?dataSource=messageIdRepoDs&amp;outputType=SelectOne"/>
 
@@ -80,7 +80,7 @@
 
 			<!-- For each new entry in the list, log and put the event on the distribution queue. -->
 			<split id="ATOM entry handling" streaming="true" stopOnException="true">
-			
+
 				<simple>${body}</simple>
 
 				<setHeader headerName="FeedId">
@@ -94,12 +94,12 @@
 				<setHeader headerName="HandelseUID">
 				    <xpath resultType="java.lang.String">concat(/*/events:HandelseUID/text(), "" , "")</xpath>
 				</setHeader>
-				
+
  				<!-- Message identifier extracted form message and put in header. -->
 				<setHeader headerName="MessageId">
 				    <simple>${headers.FeedId};${headers.HandelseUID}</simple>
 				</setHeader>
-				
+
 				<idempotentConsumer id="Idempotency handling" messageIdRepositoryRef="messageIdRepo" skipDuplicate="true">
 
 				    <!-- Use the MessageId header as key for identifying duplicate messages -->
@@ -107,16 +107,16 @@
 
 				    <!-- Print to console. -->
 				    <to uri="log:hanterar-meddelande?level=INFO" />
-				    
+
 				    <!-- Save current event to event persistance.  -->
 				    <!-- TODO: wiretap for logging... -->
-				    
+
 				    <to id="Event distribution" uri="amqxa:queue:ladok-distribution" />
 
 				</idempotentConsumer>
 
 			</split>
-			
+
 		</route>
 
 	</camelContext>

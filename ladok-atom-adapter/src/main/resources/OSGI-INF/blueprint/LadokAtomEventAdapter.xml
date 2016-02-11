@@ -105,12 +105,7 @@
 				    <!-- Use the MessageId header as key for identifying duplicate messages -->
 				    <header>MessageId</header>
 
-				    <!-- Print to console. -->
-				    <to uri="log:hanterar-meddelande?level=INFO" />
-
-				    <!-- Save current event to event persistance.  -->
-				    <!-- TODO: wiretap for logging... -->
-
+				    <!-- Distribute -->
 				    <to id="Event distribution" uri="amqxa:queue:ladok-distribution" />
 
 				</idempotentConsumer>

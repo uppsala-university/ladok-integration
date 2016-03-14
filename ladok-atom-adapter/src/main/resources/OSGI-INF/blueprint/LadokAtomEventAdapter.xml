@@ -9,22 +9,12 @@
 	xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0
 			    http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
 
-<!--
-	<cm:property-placeholder persistent-id="ladok-atom-adapter" placeholder-prefix="$(" placeholder-suffix=")">
-		<cm:default-properties>
-			<cm:property name="atom-adapter.certificateFile" value="" />
-			<cm:property name="atom-adapter.certificatePwd" value="" />
-			<cm:property name="atom-adapter.useCert" value="true" />
-			<cm:property name="atom-adapter.lastFeed" value="https://api.mit.ladok.se/uppfoljning/feed/recent" />
-		</cm:default-properties>
-	</cm:property-placeholder>
--->
-
 	<!-- References must be assigned local identifiers. -->
 	<reference id="platformTxManager" interface="org.springframework.transaction.PlatformTransactionManager" />
 	<reference id="messageIdRepoDs" interface="javax.sql.DataSource" filter="(osgi.jndi.service.name=jdbc/UUDS)" />
 	<reference id="amqxa" interface="org.apache.camel.component.jms.JmsComponent" ext:proxy-method='classes' filter="(osgi.jndi.service.name=amq/XA)" />
 	<reference id="amqdlq" interface="org.apache.camel.component.jms.JmsComponent" ext:proxy-method='classes' filter="(osgi.jndi.service.name=amq/DLQ)" />
+	<reference id="atomClient" interface="se.sunet.ati.ladok.atom.AtomClient" ext:proxy-method='classes' />
 
 	<!-- Idempotent Camel component configured with JDBC and an XA datasource -->
 	<bean id="messageIdRepo" class="org.apache.camel.processor.idempotent.jdbc.JdbcMessageIdRepository">
@@ -43,15 +33,6 @@
 	<bean id="jtaTransactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
 		<property name="transactionManager" ref="platformTxManager" />
 		<property name="propagationBehavior" value="0" />
-	</bean>
-
-	<bean id="atomClient" class="se.sunet.ati.ladok.atom.AtomClient">
-<!--
-		<property name="certificateFile" value="$(atom-adapter.certificateFile)"/>
-		<property name="certificatePwd" value="$(atom-adapter.certificatePwd)"/>
-		<property name="lastFeed" value="$(atom-adapter.lastFeed)"/>
-		<property name="useCert" value="$(atom-adapter.useCert)"/>
--->
 	</bean>
 
 	<camelContext id="LadokAtomEventAdapter"

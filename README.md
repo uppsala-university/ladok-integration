@@ -1,5 +1,5 @@
 # Ladok Integration
-The new Ladok integration component is the use of the generic Java based components for communication with new Ladok in a OSGi-based runtime environment using Apache Camel as routing specification. The component act as an adapter for a message channel.  
+The new Ladok integration component is the use of the [generic Java based components for communication with new Ladok](https://github.com/uppsala-university/ladok) in an OSGi-based runtime environment using Apache Camel as routing specification. The component act as an adapter for a message channel.  
 
 ![alt text](https://raw.githubusercontent.com/uppsala-university/ladok-integration/master/docs/ladok-atom-adapter.png "Ladok integration component")
 

@@ -16,21 +16,8 @@ Build the respective projects (common-integration, ladok, and ladok-integration)
 
     mvn install
 
-
 ## Deploy in Karaf/Servicemix
-Karaf has the ability to load features and OSGi bundles either by dropping them in the deploy folder or by
-logging in to the Karaf shell and deploying them by a set of deploy commands.
-
-Karaf will look for bundles and features referenced by a 'mvn:'-url in the local maven repository and in any
-additional repositories specified in $SERVICEMIX_HOME/etc/org.ops4j.pax.url.mvn.cfg.
-
-To deploy the Ladok Integration features and bundles, in Karaf/Servicemix shell type the following commands:
-
-    repo-add mvn:se.sunet.ati.integration.ladok/ladok-integration-packaging-karaf/1.0.0-SNAPSHOT/xml/features
-    feature:install ladok-atom-adapter
-
-Or, drop ladok-integration/ladok-integration-packaging-karaf/target/classes/features.xml in $SERVICEMIX_HOME/deploy/
-
+Deployment is bound to the execution enviroment. For deployment in a Karaf/ServiceMix environment read the [Karaf deployment documentation](https://github.com/uppsala-university/ladok-integration/tree/master/ladok-integration-packaging-karaf).
 
 ## Configuration
 Karaf reads property files in $KARAF\_HOME/etc/, so to add runtime properties needed in the OSGi bundles

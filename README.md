@@ -6,13 +6,21 @@ The new Ladok integration component is the use of the [generic Java based compon
 The adapter consumes events from the new Ladok ATOM feeds and put each event as a separate message in a message channel. The adapter is implemented from the [idempotent receiver pattern](http://www.enterpriseintegrationpatterns.com/patterns/messaging/IdempotentReceiver.html) to prevent that events are processed more than once. The log database, which the idempotency is based on, is also used as source for reading the last consumed message.
 
 ## Dependencies
-Ladok integration depends on common-integration and ladok projects. They are available on github:
+Ladok integration depends on projects
 
-https://github.com/uppsala-university
+* [common-integration](https://github.com/uppsala-university/common-integration)
+* [ladok](https://github.com/uppsala-university/ladok)
 
+available on the [Uppsala University GitHub repository](https://github.com/uppsala-university).
 
 ## Build
-Build the respective projects (common-integration, ladok, and ladok-integration) using maven:
+Build the projects
+
+* common-integration
+* ladok
+* ladok-integration
+
+using maven:
 
     mvn install
 

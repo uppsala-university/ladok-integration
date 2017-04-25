@@ -70,15 +70,15 @@
 
 				<convertBodyTo type="java.lang.String" />
 
-				<to id="ATOM XML washing" uri="xslt:atom/atomwash.xsl"/>
-
-				<setHeader headerName="HandelseUID">
-				    <xpath resultType="java.lang.String">concat(/*/events:HandelseUID/text(), "" , "")</xpath>
+				<setHeader headerName="EntryId">
+				    <xpath resultType="java.lang.String">concat(//*[local-name()='id']/text(), "" , "")</xpath>
 				</setHeader>
+
+				<to id="ATOM XML washing" uri="xslt:atom/atomwash.xsl"/>
 
  				<!-- Message identifier extracted form message and put in header. -->
 				<setHeader headerName="MessageId">
-				    <simple>${headers.FeedId};${headers.HandelseUID}</simple>
+				    <simple>${headers.FeedId};${headers.EntryId}</simple>
 				</setHeader>
 
 				<idempotentConsumer id="Idempotency handling" messageIdRepositoryRef="messageIdRepo" skipDuplicate="true">
